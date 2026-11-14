@@ -39,6 +39,15 @@ python3 -m http.server 8000
 
 y abrir http://localhost:8000
 
+## Online: cómo está optimizado
+
+- **Predicción en el invitado:** el avión propio se simula también en el cliente (mismo modelo de giro que el anfitrión), así que responde al instante aunque haya lag. El anfitrión sigue siendo la autoridad y el cliente corrige la diferencia poco a poco (sin tirones); si el error es grande (choque, reaparición) se recoloca.
+- **Controles al instante:** se envían en cuanto cambian (antes cada 33 ms fijos) y con un latido de 100 ms.
+- **Instantáneas más ligeras:** balas y posiciones redondeadas (≈35 % menos datos), 30 instantáneas/s con ≤4 pilotos y 20/s con más, descarte de instantáneas viejas y protección contra canales saturados.
+- **Latencia suavizada** (media móvil) para extrapolar a los demás aviones sin saltos.
+- **Buscar jugadores:** emparejamiento sin servidor propio mediante «buzones» de PeerJS.
+- En pruebas con latencia simulada (ida y vuelta de 160–300 ms) la respuesta del mando bajó de ~250–520 ms a ~30–70 ms.
+
 ## Notas
 
 - Las tipografías (Oswald y Barlow) se cargan desde Google Fonts. Sin conexión se usa la fuente del sistema.
