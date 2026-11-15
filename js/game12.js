@@ -152,9 +152,17 @@ function skBiome(x,k,d,X,Y,w,h,L){const r=mulberry(hashStr(k+X)),u=Math.min(w,h)
   x.strokeStyle='#ffb02e';x.lineWidth=u*.035;x.lineCap='round';for(let i=0;i<3;i++){const a=i*TAU/3+.4;x.beginPath();x.moveTo(w/2,h/2);x.lineTo(w/2+Math.cos(a)*rr0*.85,h/2+Math.sin(a)*rr0*.85);x.stroke();}
   x.fillStyle='#ffe58a';x.beginPath();x.arc(w/2,h/2,u*.03,0,TAU);x.fill();L.push([X+w/2,Y+h/2],[X+w*.2,Y+h*.4],[X+w*.8,Y+h*.6]);}
  x.restore();}
+/* ★ MINIATURAS = CAPTURA REAL DEL CENTRO DEL MAPA (img/maps/<id>.jpg, generadas con el propio renderizador del juego).
+   Si la imagen aún no ha cargado se usa el boceto antiguo y, al llegar, se refresca la interfaz. La hora del día y el tinte se siguen aplicando encima. */
+const MAPSHOT={};
+{let tm=0;for(const mp of MAPDEF){const im=new Image();MAPSHOT[mp.id]=im;
+ im.onload=()=>{for(const k of Object.keys(MSK))if(k.startsWith(mp.id+'|'))delete MSK[k];try{for(const k of Object.keys(MPIMG))if(k.startsWith(mp.id+'|'))delete MPIMG[k];}catch(e){}
+  clearTimeout(tm);tm=setTimeout(()=>{try{if(!running&&!document.getElementById('modal')&&typeof render_ui==='function')render_ui();}catch(e){}},150);};
+ im.src='img/maps/'+mp.id+'.jpg';}}
 function mapSketch(m,W,H){W=W||360;H=H||200;const tm=curTime(m.id),key=m.id+'|'+tm+'|'+W+'x'+H;if(MSK[key])return MSK[key];
- const c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d'),L=[],bid=m.base||m.id;
- if(m.id==='mundo'){const R=[['archi',0,0,.392,.52],['canon',.392,0,.369,.52],['valle',.761,0,.239,.52],['valle',0,.52,.347,.48],['metro',.347,.52,.313,.48],['fabrica',.66,.52,.34,.48]];
+ const c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d'),L=[],bid=m.base||m.id,shot=MAPSHOT[m.id],useShot=!!(shot&&shot.complete&&shot.naturalWidth);
+ if(useShot){const k=Math.max(W/shot.naturalWidth,H/shot.naturalHeight),dw=shot.naturalWidth*k,dh=shot.naturalHeight*k;x.drawImage(shot,(W-dw)/2,(H-dh)/2,dw,dh);}
+ else if(m.id==='mundo'){const R=[['archi',0,0,.392,.52],['canon',.392,0,.369,.52],['valle',.761,0,.239,.52],['valle',0,.52,.347,.48],['metro',.347,.52,.313,.48],['fabrica',.66,.52,.34,.48]];
   for(const q of R)skBiome(x,q[0],MAPD[q[0]],q[1]*W,q[2]*H,q[3]*W+1,q[4]*H+1,L);
   x.strokeStyle='rgba(255,255,255,.4)';x.lineWidth=1.5;for(const q of R)x.strokeRect(q[1]*W,q[2]*H,q[3]*W,q[4]*H);}
  else skBiome(x,bid,m,0,0,W,H,L);
@@ -162,5 +170,5 @@ function mapSketch(m,W,H){W=W||360;H=H||200;const tm=curTime(m.id),key=m.id+'|'+
  x.globalCompositeOperation='source-over';
  const vg=x.createRadialGradient(W/2,H/2,H*.3,W/2,H/2,W*.65);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,.32)');x.fillStyle=vg;x.fillRect(0,0,W,H);
  if(tm==='noche'||tm==='atardecer'){x.globalCompositeOperation='lighter';for(const p of L){const g=x.createRadialGradient(p[0],p[1],0,p[0],p[1],H*.06);g.addColorStop(0,tm==='noche'?'rgba(255,225,130,.95)':'rgba(255,200,110,.45)');g.addColorStop(1,'rgba(255,200,90,0)');x.fillStyle=g;x.fillRect(p[0]-H*.07,p[1]-H*.07,H*.14,H*.14);}x.globalCompositeOperation='source-over';}
- return MSK[key]=c.toDataURL('image/jpeg',.88);}
+ try{return MSK[key]=c.toDataURL('image/jpeg',.88);}catch(e){return useShot?shot.src:'';} /* abierto con file:// el lienzo queda «contaminado»: se usa la imagen tal cual */}
 
